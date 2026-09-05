@@ -1,0 +1,66 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:15-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: sih
+      POSTGRES_PASSWORD: sih_password
+      POSTGRES_DB: eta_forecast
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sih -d eta_forecast"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file:
+      - ../.env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://sih:sih_password@db:5432/eta_forecast
+      DATABASE_SYNC_URL: postgresql://sih:sih_password@db:5432/eta_forecast
+      MODEL_PATH: /app/ml_artifacts/xgb_model.joblib
+      SCALER_PATH: /app/ml_artifacts/scaler.joblib
+      FEATURE_LIST_PATH: /app/ml_artifacts/feature_list.json
+      EVAL_RESULTS_PATH: /app/ml_artifacts/evaluation_results.json
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ../ml/artifacts:/app/ml_artifacts:ro
+
+  simulation:
+    build:
+      context: ../simulation
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      BACKEND_API_URL: http://backend:8000
+      SIM_SPEED_FACTOR: "60"
+      SIM_TELEMETRY_INTERVAL_SEC: "2"
+    depends_on:
+      - backend
+
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:

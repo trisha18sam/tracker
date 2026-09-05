@@ -1,0 +1,64 @@
+{
+  "model_name": "XGBoost Residual Predictor",
+  "model_version": "xgb_v1",
+  "training_journeys": 519,
+  "test_journeys": 129,
+  "train_cutoff_date": "2025-10-18",
+  "data_source": "SIMULATED",
+  "evaluation_note": "Train/test split by journey date \u2014 no data leakage. All data is synthetic/simulated (labelled SIMULATED).",
+  "baselines": [
+    {
+      "name": "Baseline 1 \u2014 Scheduled ETA (no adjustment)",
+      "mae_min": 9.483,
+      "rmse_min": 13.766,
+      "mean_delay_error_min": 42.805
+    },
+    {
+      "name": "Baseline 2 \u2014 Current delay propagated forward",
+      "mae_min": 40.364,
+      "rmse_min": 53.355,
+      "mean_delay_error_min": 40.364
+    },
+    {
+      "name": "Baseline 3 \u2014 Historical section-time adjusted",
+      "mae_min": 8.533,
+      "rmse_min": 12.177,
+      "mean_delay_error_min": 8.533
+    }
+  ],
+  "our_model": {
+    "name": "XGBoost dynamic ETA (our model)",
+    "mae_min": 3.852,
+    "rmse_min": 5.198,
+    "mean_delay_error_min": 3.852
+  },
+  "improvement_vs_baseline1_pct": 59.4,
+  "improvement_vs_baseline2_pct": 90.5,
+  "improvement_vs_baseline3_pct": 54.9,
+  "feature_importance": {
+    "current_delay_min": 0.005631240084767342,
+    "current_speed_kmh": 0.12031415104866028,
+    "speed_ratio": 0.03493109345436096,
+    "section_hist_avg_travel_time_min": 0.041234251111745834,
+    "section_hist_std_dev_min": 0.08065585047006607,
+    "sections_remaining": 0.0,
+    "distance_remaining_km": 0.02851836197078228,
+    "entry_delay_min": 0.005423606839030981,
+    "recent_speed_trend": 0.0,
+    "hour_sin": 0.006572012789547443,
+    "hour_cos": 0.006193827372044325,
+    "dow_sin": 0.005319429561495781,
+    "dow_cos": 0.005364987533539534,
+    "train_type_encoded": 0.0053621698170900345,
+    "active_speed_restriction": 0.5988660454750061,
+    "speed_restriction_ratio": 0.0,
+    "unscheduled_stoppage_ahead": 0.006070364732295275,
+    "preceding_train_delay_min": 0.004744843579828739,
+    "cumulative_dwell_excess_min": 0.005773432552814484,
+    "weather_encoded": 0.014721240848302841,
+    "section_distance_km": 0.010122728534042835,
+    "scheduled_travel_time_min": 0.014180428348481655,
+    "delay_trend": 0.0
+  },
+  "generated_at": "2026-09-04T17:56:20.473648"
+}

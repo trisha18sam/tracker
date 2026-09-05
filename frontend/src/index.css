@@ -1,0 +1,730 @@
+/* ==========================================================================
+   INDIAN RAILWAYS TECHNOLOGY PLATFORM — INDUSTRIAL DESIGN SYSTEM (SIH26028)
+   Purpose-built for CRIS / NTES / COIS Railway Traffic & Passenger Systems
+   ========================================================================== */
+
+:root {
+  /* Surface colors — slate/navy control room theme */
+  --bg-canvas: #090c12;
+  --bg-panel: #101520;
+  --bg-panel-elevated: #161c2c;
+  --bg-panel-hover: #1c2438;
+  --bg-input: #0c1018;
+
+  /* Borders & Dividers */
+  --border-subtle: #1a2233;
+  --border-default: #253046;
+  --border-strong: #33415e;
+
+  /* Typography */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', 'Roboto Mono', Consolas, monospace;
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --text-disabled: #475569;
+
+  /* Semantic Railway State Colors */
+  --rail-ontime: #10b981;
+  --rail-ontime-bg: rgba(16, 185, 129, 0.12);
+  --rail-ontime-border: rgba(16, 185, 129, 0.3);
+
+  --rail-caution: #f59e0b;
+  --rail-caution-bg: rgba(245, 158, 11, 0.12);
+  --rail-caution-border: rgba(245, 158, 11, 0.3);
+
+  --rail-critical: #ef4444;
+  --rail-critical-bg: rgba(239, 68, 68, 0.12);
+  --rail-critical-border: rgba(239, 68, 68, 0.3);
+
+  --rail-info: #38bdf8;
+  --rail-info-bg: rgba(56, 189, 248, 0.12);
+  --rail-info-border: rgba(56, 189, 248, 0.3);
+
+  --rail-accent: #6366f1;
+  --rail-accent-bg: rgba(99, 102, 241, 0.12);
+  --rail-accent-border: rgba(99, 102, 241, 0.3);
+
+  /* Spacing */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-full: 9999px;
+
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 12px 0 rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 10px 25px -3px rgba(0, 0, 0, 0.6);
+}
+
+/* Reset & Base */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  background-color: var(--bg-canvas);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Typography styles */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--text-primary);
+  font-weight: 700;
+  letter-spacing: -0.015em;
+}
+
+h1 { font-size: 1.6rem; line-height: 1.25; }
+h2 { font-size: 1.3rem; line-height: 1.3; }
+h3 { font-size: 1.05rem; line-height: 1.35; }
+h4 { font-size: 0.95rem; font-weight: 600; }
+
+p { color: var(--text-secondary); }
+
+.mono {
+  font-family: var(--font-mono);
+  font-feature-settings: "tnum";
+}
+
+/* Layout Framework */
+.layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background:
+    linear-gradient(to bottom, rgba(9, 12, 18, 0.82) 0%, rgba(9, 12, 18, 0.93) 100%),
+    url('/assets/railway_bg.jpg') center center / cover no-repeat fixed;
+}
+
+.page-container {
+  max-width: 1400px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 16px 20px 48px;
+}
+
+/* Navbar — Industrial Header */
+.navbar {
+  background: rgba(10, 14, 22, 0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border-default);
+  height: 56px;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.navbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  color: inherit;
+}
+
+.navbar-logo-badge {
+  background: #1e293b;
+  border: 1px solid var(--border-strong);
+  color: var(--rail-info);
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.navbar-title-wrap {
+  display: flex;
+  flex-direction: column;
+}
+
+.navbar-system-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.navbar-system-title span.sih-tag {
+  background: var(--rail-info-bg);
+  color: var(--rail-info);
+  border: 1px solid var(--rail-info-border);
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+}
+
+.navbar-system-subtitle {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.navbar-nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--bg-canvas);
+  padding: 3px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+}
+
+.nav-link {
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: var(--radius-sm);
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.nav-link:hover {
+  color: var(--text-primary);
+  background: var(--bg-panel-elevated);
+}
+
+.nav-link.active {
+  color: #ffffff;
+  background: var(--bg-panel-hover);
+  border: 1px solid var(--border-strong);
+  box-shadow: var(--shadow-sm);
+}
+
+.navbar-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.rail-clock {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  background: var(--bg-canvas);
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+}
+
+.telemetry-status-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  font-family: var(--font-mono);
+  letter-spacing: 0.02em;
+}
+
+.telemetry-status-pill.live {
+  background: var(--rail-ontime-bg);
+  color: var(--rail-ontime);
+  border: 1px solid var(--rail-ontime-border);
+}
+
+.telemetry-status-pill.sim {
+  background: var(--rail-caution-bg);
+  color: var(--rail-caution);
+  border: 1px solid var(--rail-caution-border);
+}
+
+.live-pulse-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: currentColor;
+  animation: pulse 2s infinite ease-in-out;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+/* Cards & Containers */
+.card {
+  background: rgba(16, 21, 32, 0.88);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  padding: 16px 20px;
+  position: relative;
+}
+
+/* Train Hero Image inside card */
+.train-hero-img {
+  width: 100%;
+  height: 140px;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+  margin-bottom: 12px;
+  display: block;
+  border: 1px solid var(--border-subtle);
+  filter: brightness(0.9) contrast(1.05);
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.card-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Stat Grid */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+}
+
+.stat-tile {
+  background-color: var(--bg-panel-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+}
+
+.stat-tile-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+
+.stat-tile-value {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  line-height: 1.1;
+}
+
+.stat-tile-sub {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+/* Delay Badges */
+.delay-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 0.78rem;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  letter-spacing: 0.02em;
+}
+
+.delay-badge.early {
+  background-color: var(--rail-info-bg);
+  color: var(--rail-info);
+  border: 1px solid var(--rail-info-border);
+}
+
+.delay-badge.ontime {
+  background-color: var(--rail-ontime-bg);
+  color: var(--rail-ontime);
+  border: 1px solid var(--rail-ontime-border);
+}
+
+.delay-badge.moderate {
+  background-color: var(--rail-caution-bg);
+  color: var(--rail-caution);
+  border: 1px solid var(--rail-caution-border);
+}
+
+.delay-badge.severe {
+  background-color: var(--rail-critical-bg);
+  color: var(--rail-critical);
+  border: 1px solid var(--rail-critical-border);
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 16px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-decoration: none;
+  font-family: var(--font-sans);
+}
+
+.btn-primary {
+  background-color: #2563eb;
+  color: #ffffff;
+  border-color: #3b82f6;
+}
+
+.btn-primary:hover {
+  background-color: #1d4ed8;
+  border-color: #60a5fa;
+}
+
+.btn-secondary {
+  background-color: var(--bg-panel-elevated);
+  color: var(--text-primary);
+  border-color: var(--border-default);
+}
+
+.btn-secondary:hover {
+  background-color: var(--bg-panel-hover);
+  border-color: var(--border-strong);
+}
+
+.btn-ghost {
+  background-color: transparent;
+  color: var(--text-secondary);
+  border-color: var(--border-subtle);
+}
+
+.btn-ghost:hover {
+  background-color: var(--bg-panel-elevated);
+  color: var(--text-primary);
+  border-color: var(--border-default);
+}
+
+.btn-danger {
+  background-color: var(--rail-critical-bg);
+  color: var(--rail-critical);
+  border-color: var(--rail-critical-border);
+}
+
+.btn-danger:hover {
+  background-color: rgba(239, 68, 68, 0.2);
+}
+
+.btn-sm {
+  padding: 4px 10px;
+  font-size: 0.78rem;
+  border-radius: var(--radius-sm);
+}
+
+.btn-lg {
+  padding: 12px 24px;
+  font-size: 0.95rem;
+}
+
+/* Inputs & Form Controls */
+.input {
+  background-color: var(--bg-input);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  padding: 8px 12px;
+  font-size: 0.85rem;
+  font-family: var(--font-sans);
+  outline: none;
+  transition: border-color 0.15s ease;
+  width: 100%;
+}
+
+.input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+/* Data Tables */
+.data-table-container {
+  overflow-x: auto;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  background: var(--bg-panel);
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+  text-align: left;
+}
+
+.data-table th {
+  background-color: var(--bg-panel-elevated);
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border-default);
+}
+
+.data-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+}
+
+.data-table tr:last-child td {
+  border-bottom: none;
+}
+
+.data-table tr:hover td {
+  background-color: var(--bg-panel-hover);
+  color: var(--text-primary);
+}
+
+/* ETA Cards */
+.eta-card {
+  background-color: var(--bg-panel-elevated);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  transition: all 0.2s ease;
+}
+
+.eta-card:hover {
+  border-color: var(--border-strong);
+}
+
+.eta-card.highlight {
+  border-color: var(--rail-caution);
+  animation: etaFlash 1s ease-in-out;
+}
+
+@keyframes etaFlash {
+  0% { background-color: rgba(245, 158, 11, 0.25); }
+  100% { background-color: var(--bg-panel-elevated); }
+}
+
+.eta-times-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.3fr 1fr;
+  gap: 8px;
+  background: var(--bg-canvas);
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+  margin: 10px 0;
+}
+
+.eta-time-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.eta-time-label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 2px;
+}
+
+.eta-time-value {
+  font-family: var(--font-mono);
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.eta-time-value.scheduled {
+  color: var(--text-muted);
+}
+
+.eta-range-pill {
+  font-size: 0.72rem;
+  font-family: var(--font-mono);
+  color: var(--text-secondary);
+}
+
+/* Confidence Bar */
+.confidence-bar-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.72rem;
+}
+
+.confidence-track {
+  flex: 1;
+  height: 5px;
+  background: var(--border-default);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.confidence-fill {
+  height: 100%;
+  border-radius: var(--radius-full);
+  transition: width 0.3s ease;
+}
+
+/* Factor List in Explanation Drawer */
+.factor-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 10px;
+  background: var(--bg-canvas);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+}
+
+.factor-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.78rem;
+}
+
+.factor-delta {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 0.75rem;
+  padding: 1px 6px;
+  border-radius: var(--radius-sm);
+  min-width: 58px;
+  text-align: center;
+}
+
+.factor-delta.late {
+  background: var(--rail-caution-bg);
+  color: var(--rail-caution);
+  border: 1px solid var(--rail-caution-border);
+}
+
+.factor-delta.early {
+  background: var(--rail-ontime-bg);
+  color: var(--rail-ontime);
+  border: 1px solid var(--rail-ontime-border);
+}
+
+/* Utility Helpers */
+.flex { display: flex; }
+.items-center { align-items: center; }
+.justify-between { justify-content: space-between; }
+.gap-2 { gap: 8px; }
+.gap-3 { gap: 12px; }
+.gap-4 { gap: 16px; }
+
+.mb-1 { margin-bottom: 4px; }
+.mb-2 { margin-bottom: 8px; }
+.mb-3 { margin-bottom: 12px; }
+.mb-4 { margin-bottom: 16px; }
+.mb-6 { margin-bottom: 24px; }
+.mt-2 { margin-top: 8px; }
+.mt-4 { margin-top: 16px; }
+
+.text-xs { font-size: 0.72rem; }
+.text-sm { font-size: 0.82rem; }
+.text-muted { color: var(--text-muted); }
+.text-secondary { color: var(--text-secondary); }
+.text-primary { color: var(--text-primary); }
+.w-full { width: 100%; }
+
+/* Responsive rules */
+@media (max-width: 960px) {
+  .navbar {
+    height: auto;
+    padding: 12px 16px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .navbar-nav {
+    order: 3;
+    width: 100%;
+    justify-content: space-around;
+  }
+  .page-container {
+    padding: 14px 14px 40px;
+  }
+  .stat-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .stat-grid {
+    grid-template-columns: 1fr;
+  }
+  .eta-times-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* ─── Seat Finder & Coach Seat Map Custom Styles ─── */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.seat-grid-cell {
+  position: relative;
+  cursor: pointer;
+  border-radius: var(--radius-md);
+  padding: 8px 10px;
+  transition: all 0.15s ease-in-out;
+}
+
+.seat-grid-cell:hover {
+  transform: translateY(-1px);
+}
+
+.seat-berth-badge {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 0.65rem;
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+
