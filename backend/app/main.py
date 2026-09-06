@@ -32,6 +32,7 @@ from app.routers.simulation import router as sim_router
 from app.routers.analytics import router as analytics_router
 from app.routers.network import stations_router, routes_router
 from app.routers.seats import router as seats_router
+from app.routers.pantry import router as pantry_router
 from app.prediction.engine import get_engine
 
 logging.basicConfig(
@@ -47,6 +48,21 @@ async def lifespan(app: FastAPI):
     async with async_engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     logger.info("Database tables ensured.")
+
+    # Check if database needs expanded authentic railway dataset
+    try:
+        from app.database import SyncSessionLocal
+        from app.models import Station
+        from app.seed_expanded import seed_expanded_data
+        with SyncSessionLocal() as session:
+            st_count = session.query(Station).count()
+            if st_count < 20:
+                logger.info("Seeding expanded authentic railway dataset (%d stations found)...", st_count)
+                seed_expanded_data(session)
+            else:
+                logger.info("Database verified with %d stations.", st_count)
+    except Exception as exc:
+        logger.warning("Auto-seeding check skipped: %s", exc)
 
     # Pre-load ML model
     engine = get_engine()
@@ -91,6 +107,8 @@ app.include_router(analytics_router, prefix="/api/v1")
 app.include_router(stations_router, prefix="/api/v1")
 app.include_router(routes_router, prefix="/api/v1")
 app.include_router(seats_router, prefix="/api/v1")
+app.include_router(pantry_router, prefix="/api/v1")
+
 
 
 # ── WebSocket endpoints ───────────────────────────────────────────────────────

@@ -13,6 +13,7 @@ import type {
 } from '../types';
 import { CoachSeatMap } from '../components/CoachSeatMap';
 import { BookingModal } from '../components/BookingModal';
+import { DataBadge } from '../components/DataBadge';
 import { useAuth } from '../context/AuthContext';
 
 export const SeatFinder: React.FC = () => {
@@ -84,10 +85,11 @@ export const SeatFinder: React.FC = () => {
   const loadStations = async () => {
     try {
       const data = await api.getStations();
-      setStations(data);
-      if (data.length >= 2) {
-        setFromStationId(1);
-        setToStationId(5);
+      const sorted = [...data].sort((a, b) => a.name.localeCompare(b.name));
+      setStations(sorted);
+      if (sorted.length >= 2) {
+        setFromStationId(1);  // NDLS
+        setToStationId(23);  // CNB (Kanpur Central)
       }
     } catch (err: any) {
       console.error('Failed to load stations', err);
@@ -144,7 +146,7 @@ export const SeatFinder: React.FC = () => {
   // Perform initial search when stations load
   useEffect(() => {
     if (stations.length > 0 && !searched) {
-      handleSearch(1, 5);
+      handleSearch(1, 23);
     }
   }, [stations]);
 
@@ -291,13 +293,15 @@ export const SeatFinder: React.FC = () => {
         {/* Quick Segment Presets */}
         <div className="flex items-center gap-2 flex-wrap" style={{ marginTop: 14 }}>
           <span className="text-xs text-muted mono" style={{ fontWeight: 600, textTransform: 'uppercase' }}>
-            Popular Sub-Segments:
+            Popular Trunk Segments:
           </span>
           {[
-            { label: 'New Delhi ➔ Jaipur', fromId: 1, toId: 5 },
-            { label: 'Jaipur ➔ Ajmer (+127 Deboard Vacancies)', fromId: 5, toId: 6 },
-            { label: 'Ajmer ➔ Ahmedabad', fromId: 6, toId: 9 },
-            { label: 'New Delhi ➔ Mumbai Central (Full Corridor)', fromId: 1, toId: 12 },
+            { label: 'NDLS ➔ Kanpur Central (Shatabdi & Vande Bharat)', fromId: 1, toId: 23 },
+            { label: 'NDLS ➔ Mumbai Central (Mumbai Rajdhani)', fromId: 1, toId: 40 },
+            { label: 'NDLS ➔ Lucknow Charbagh (Shatabdi)', fromId: 1, toId: 25 },
+            { label: 'NDLS ➔ Varanasi Junction (Vande Bharat)', fromId: 1, toId: 27 },
+            { label: 'NDLS ➔ Jaipur Junction (Rajdhani)', fromId: 1, toId: 5 },
+            { label: 'Howrah ➔ New Delhi (Howrah Rajdhani)', fromId: 68, toId: 1 },
           ].map((p, idx) => (
             <button
               key={idx}
@@ -532,7 +536,7 @@ export const SeatFinder: React.FC = () => {
                   {/* Train Header Row */}
                   <div className="flex items-center justify-between pb-2 mb-3" style={{ borderBottom: '1px solid var(--border-default)' }}>
                     <div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <span className="mono font-bold" style={{ fontSize: '1.2rem', color: '#f1f5f9' }}>
                           #{train.train_number}
                         </span>
@@ -550,6 +554,8 @@ export const SeatFinder: React.FC = () => {
                         >
                           {train.train_type}
                         </span>
+                        <DataBadge sourceType="DATABASE" label="AUTHENTIC RAKE" />
+                        <DataBadge sourceType="PREDICTION" label="ML DEBOARD PREDICTION" />
                       </div>
                       <div className="text-xs text-muted mt-1">
                         📍 Live: <strong style={{ color: 'var(--text-primary)' }}>{train.current_train_location}</strong> · Distance: <strong style={{ color: '#38bdf8' }}>{train.distance_to_boarding_km} km away</strong>
@@ -561,7 +567,7 @@ export const SeatFinder: React.FC = () => {
                         {train.total_potential_seats}
                       </div>
                       <div className="text-xs text-muted mono" style={{ textTransform: 'uppercase' }}>
-                        Total Berths Available
+                        Segment & Deboard Berths
                       </div>
                     </div>
                   </div>
@@ -683,6 +689,22 @@ export const SeatFinder: React.FC = () => {
                           </div>
                         </div>
                       ))}
+                    </div>
+
+                    {/* Berth Preference & Allocation Notice */}
+                    <div
+                      className="text-xs mt-2 p-2 rounded flex items-center justify-between flex-wrap gap-2"
+                      style={{
+                        background: 'rgba(15, 23, 42, 0.7)',
+                        border: '1px solid var(--border-subtle)',
+                        fontSize: '0.72rem',
+                        lineHeight: 1.4,
+                      }}
+                    >
+                      <div>
+                        <span style={{ color: '#f59e0b', fontWeight: 600 }}>⚠️ Berth Preference & PRS Allocation:</span> Seat selections represent passenger booking preference. Final coach and berth allocation is governed by Indian Railways Charting regulations at train charting time.
+                      </div>
+                      <span className="text-xs mono text-muted">Segment Matrix Model</span>
                     </div>
                   </div>
 

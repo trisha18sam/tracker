@@ -8,6 +8,7 @@ import { Train, TrainDetail, TrainPredictions, TrainLive, ETAPrediction } from '
 import { api, connectRunWS, formatDelay, delayClass, formatTime } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { BookingModal } from '../components/BookingModal';
+import { DataBadge } from '../components/DataBadge';
 import ETACard from '../components/ETACard';
 import RouteMap from '../components/RouteMap';
 import PassengerTimeline from '../components/PassengerTimeline';
@@ -60,9 +61,29 @@ export default function PassengerApp() {
   useEffect(() => {
     api.getTrains().then(list => {
       setTrains(list);
-      if (list.length > 0) setSelectedTrainId(list[0].id);
+      if (list.length > 0 && selectedTrainId === null) setSelectedTrainId(list[0].id);
     }).catch(() => {});
   }, []);
+
+  // Search trains dynamically with backend API fallback
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      api.getTrains().then(list => setTrains(list)).catch(() => {});
+      return;
+    }
+    const timer = setTimeout(() => {
+      api.searchTrains(searchQuery.trim()).then(res => {
+        const list: Train[] = (res && Array.isArray(res.trains)) ? res.trains : [];
+        setTrains(list);
+        if (list.length > 0) {
+          if (!list.some(t => t.id === selectedTrainId)) {
+            setSelectedTrainId(list[0].id);
+          }
+        }
+      }).catch(() => {});
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [searchQuery, selectedTrainId]);
 
   const loadTrain = useCallback(async (trainId: number) => {
     setLoading(true);
@@ -239,17 +260,17 @@ export default function PassengerApp() {
         </div>
 
         {/* Search + Train Selector */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 10, alignItems: 'center' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(260px, 1fr) auto', gap: 10, alignItems: 'center' }}>
           <input
             id="train-search-input"
             type="text"
             className="input"
-            placeholder="Search train number (12952, 12957), name (Rajdhani), or station (NDLS, ADI)..."
+            placeholder="Search train (e.g. 12952, 12004, 22436, Rajdhani, Shatabdi, NDLS, CNB)..."
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             style={{ fontSize: '0.85rem' }}
           />
-          <div style={{ display: 'flex', gap: 6 }}>
+          <div style={{ display: 'flex', gap: 6, overflowX: 'auto', maxWidth: '60vw', paddingBottom: 2 }}>
             {filteredTrains.map(t => (
               <button
                 key={t.id}
@@ -262,6 +283,55 @@ export default function PassengerApp() {
             ))}
           </div>
         </div>
+
+        {/* Honest Empty State if train search doesn't match */}
+        {filteredTrains.length === 0 && (
+          <div
+            className="card mt-3"
+            style={{
+              background: 'rgba(15, 23, 42, 0.9)',
+              border: '1px solid var(--border-default)',
+              padding: '16px 18px',
+            }}
+          >
+            <div className="flex items-center justify-between flex-wrap gap-2 mb-2">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-bold" style={{ color: '#f59e0b' }}>
+                  ⚠️ Train Not in Active Prototype Schedule
+                </span>
+                <DataBadge sourceType="DATABASE" label="TRANSPARENT BOUNDARY" />
+              </div>
+              <span className="text-xs text-muted mono">8 Active Trunk Corridor Trains</span>
+            </div>
+            <p className="text-xs text-secondary" style={{ lineHeight: 1.5, margin: '4px 0 10px' }}>
+              No direct schedule found for <strong>"{searchQuery}"</strong>. Rather than fabricating placeholder data, TrackIQ accurately mirrors official rakes and schedules for 8 major trunk trains. Select any active train below to explore live telemetry, coach rakes, and dynamic ETAs:
+            </p>
+            <div className="flex items-center gap-2 flex-wrap">
+              {[
+                { id: 1, label: '#12952 Mumbai Rajdhani (NDLS ➔ MMCT)' },
+                { id: 2, label: '#12951 NDLS Rajdhani (MMCT ➔ NDLS)' },
+                { id: 3, label: '#12004 Lucknow Shatabdi (NDLS ➔ LKO)' },
+                { id: 4, label: '#12003 NDLS Shatabdi (LKO ➔ NDLS)' },
+                { id: 5, label: '#22436 Vande Bharat (NDLS ➔ BSB)' },
+                { id: 6, label: '#22435 Vande Bharat (BSB ➔ NDLS)' },
+                { id: 7, label: '#12301 Howrah Rajdhani (HWH ➔ NDLS)' },
+                { id: 8, label: '#12626 Kerala Express (NDLS ➔ TVC)' },
+              ].map(t => (
+                <button
+                  key={t.id}
+                  className="btn btn-sm btn-secondary"
+                  style={{ fontSize: '0.72rem', padding: '3px 8px' }}
+                  onClick={() => {
+                    setSearchQuery('');
+                    loadTrain(t.id);
+                  }}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Recent searches */}
         {user.recentSearches.length > 0 && (
@@ -349,17 +419,24 @@ export default function PassengerApp() {
                 <div style={{ position: 'absolute', bottom: 10, left: 14, right: 14 }}>
                   <div className="flex items-center justify-between">
                     <div>
-                      <span className="mono text-xs text-muted" style={{ textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                        #{trainDetail.number} · {trainDetail.train_type} · {trainDetail.rake_type}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="mono text-xs text-muted" style={{ textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                          #{trainDetail.number} · {trainDetail.train_type} · {trainDetail.rake_type}
+                        </span>
+                        <DataBadge sourceType="DATABASE" label="SCHEDULE DATABASE" />
+                      </div>
                       <h2 style={{ fontSize: '1.15rem', marginTop: 1, lineHeight: 1.2 }}>{trainDetail.name}</h2>
                     </div>
                     <div style={{ textAlign: 'right', flexShrink: 0 }}>
                       <span className={`delay-badge ${delayClass(currentDelay)}`} style={{ fontSize: '0.82rem' }}>
                         {formatDelay(currentDelay)}
                       </span>
-                      <div className="telemetry-status-pill live mt-2" style={{ display: 'inline-flex', fontSize: '0.65rem' }}>
-                        <span className="live-pulse-dot" /> LIVE
+                      <div className="mt-2 flex items-center justify-end gap-1">
+                        <DataBadge
+                          sourceType={liveData?.run?.id ? 'LIVE_API' : 'DATABASE'}
+                          isSimulated={true}
+                          label={liveData?.run?.id ? 'LIVE SIMULATED' : 'SCHEDULED'}
+                        />
                       </div>
                     </div>
                   </div>

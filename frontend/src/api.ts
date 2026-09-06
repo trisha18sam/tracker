@@ -17,11 +17,25 @@ async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
 
 export const api = {
   getTrains:            () => apiFetch<import('./types').Train[]>('/trains'),
+  searchTrains:         (q: string, from_station?: string, to_station?: string) => {
+    const params = new URLSearchParams();
+    if (q) params.set('q', q);
+    if (from_station) params.set('from_station', from_station);
+    if (to_station) params.set('to_station', to_station);
+    return apiFetch<{ provenance: any; query: string; count: number; trains: any[] }>(`/trains/search?${params.toString()}`);
+  },
   getTrain:             (id: number) => apiFetch<import('./types').TrainDetail>(`/trains/${id}`),
   getTrainLive:         (id: number) => apiFetch<import('./types').TrainLive>(`/trains/${id}/live`),
   getTrainPredictions:  (id: number) => apiFetch<import('./types').TrainPredictions>(`/trains/${id}/predictions`),
   getStations:          () => apiFetch<import('./types').Station[]>('/stations'),
-  getRoute:             (id: number) => apiFetch<import('./types').Route>(`/routes/${id}`),
+  searchStations:       (q: string, limit: number = 20) => {
+    const params = new URLSearchParams();
+    if (q) params.set('q', q);
+    params.set('limit', String(limit));
+    return apiFetch<{ provenance: any; query: string; count: number; stations: import('./types').Station[] }>(`/stations/search?${params.toString()}`);
+  },
+  getRoute:             () => apiFetch<import('./types').Route>(`/routes/1`),
+
   getActiveRuns:        () => apiFetch<import('./types').ActiveRunSummary[]>('/analytics/active-runs'),
   getModelPerformance:  () => apiFetch<import('./types').ModelPerformance>('/analytics/model-performance'),
   getSectionBottlenecks:() => apiFetch<import('./types').SectionBottleneck[]>('/analytics/section-bottlenecks'),
@@ -68,7 +82,25 @@ export const api = {
     apiFetch<{ message: string; event: unknown }>('/seats/simulate-event', { method: 'POST', body: JSON.stringify(payload) }),
   getSeatOperationsAnalytics: () =>
     apiFetch<import('./types').SeatOperationsAnalytics>('/seats/operations-analytics'),
+
+  /* Pantry & Onboard Catering */
+  getPantryMenu: (trainNumber?: string, stationCode?: string) => {
+    const query = new URLSearchParams();
+    if (trainNumber) query.set('train_number', trainNumber);
+    if (stationCode) query.set('station_code', stationCode);
+    return apiFetch<{
+      provenance: any;
+      official_tariff_source?: string;
+      vendors?: any[];
+      items: any[];
+      categories: Record<string, any[]>;
+      total_items: number;
+    }>(`/pantry/menu?${query.toString()}`);
+  },
+  createPantryOrder: (payload: unknown) =>
+    apiFetch<any>('/pantry/order', { method: 'POST', body: JSON.stringify(payload) }),
 };
+
 
 export function connectRunWS(
   runId: number,

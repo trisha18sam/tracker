@@ -10,15 +10,28 @@ from typing import List
 from app.database import get_async_db
 from app.models import Station, Route, RouteSection
 from app.schemas import StationOut, RouteOut
+from app.providers.database_provider import DatabaseRailwayProvider
 
 stations_router = APIRouter(prefix="/stations", tags=["stations"])
 routes_router = APIRouter(prefix="/routes", tags=["routes"])
+
+
+@stations_router.get("/search")
+async def search_stations(
+    q: str = "",
+    limit: int = 20,
+    db: AsyncSession = Depends(get_async_db),
+):
+    """Fuzzy + prefix search across station code, name, city, and state."""
+    provider = DatabaseRailwayProvider(db)
+    return await provider.search_stations(query=q, limit=limit)
 
 
 @stations_router.get("", response_model=List[StationOut])
 async def list_stations(db: AsyncSession = Depends(get_async_db)):
     result = await db.execute(select(Station))
     return result.scalars().all()
+
 
 
 @stations_router.get("/{station_id}", response_model=StationOut)

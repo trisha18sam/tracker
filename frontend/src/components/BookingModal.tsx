@@ -30,6 +30,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
   const [passengerName, setPassengerName] = useState(user.name || 'Rahul Sharma');
   const [age, setAge] = useState('32');
   const [gender, setGender] = useState('MALE');
+  const [preferredBerth, setPreferredBerth] = useState<string>(berthType || 'LOWER');
   const [confirmedBooking, setConfirmedBooking] = useState<BookingRecord | null>(null);
 
   const fareTable: Record<string, number> = {
@@ -51,7 +52,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
       coachClass,
       coachCode,
       seatNumber,
-      berthType,
+      berthType: preferredBerth,
       amountPaid: fare,
     });
     setConfirmedBooking(booking);
@@ -75,7 +76,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
         className="card animate-fadeIn"
         style={{
           width: '100%',
-          maxWidth: 480,
+          maxWidth: 500,
           background: 'var(--bg-panel)',
           borderColor: confirmedBooking ? '#10b981' : 'rgba(56, 189, 248, 0.4)',
           boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.9)',
@@ -88,10 +89,10 @@ export const BookingModal: React.FC<BookingModalProps> = ({
             <div className="flex items-center justify-between pb-3 mb-3" style={{ borderBottom: '1px solid var(--border-default)' }}>
               <div>
                 <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#f1f5f9' }}>
-                  Confirm Segment Ticket
+                  Prototype Segment Booking
                 </h2>
                 <span className="text-xs text-muted mono">
-                  CRIS Prototype PRS Terminal
+                  SIH Prototype PRS Simulator · Transparent Allocation
                 </span>
               </div>
               <button
@@ -131,10 +132,6 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                   <span>Travel Date:</span>
                   <strong className="text-white">{travelDate}</strong>
                 </div>
-                <div className="flex items-center justify-between">
-                  <span>Allocated Berth:</span>
-                  <strong className="text-emerald-400">Coach {coachCode} · Berth #{seatNumber} ({berthType})</strong>
-                </div>
               </div>
             </div>
 
@@ -159,7 +156,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                 }}
               />
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
                 <div>
                   <label className="text-xs text-muted mono uppercase mb-1" style={{ display: 'block' }}>
                     Age:
@@ -202,12 +199,61 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                   </select>
                 </div>
               </div>
+
+              {/* Berth Preference (Subject to availability) */}
+              <div style={{ marginBottom: 10 }}>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-xs text-muted mono uppercase">
+                    Berth Preference:
+                  </label>
+                  <span className="text-xs" style={{ color: '#f59e0b', fontSize: '0.75rem' }}>
+                    Not Guaranteed
+                  </span>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 4 }}>
+                  {[
+                    { id: 'LOWER', label: 'Lower' },
+                    { id: 'MIDDLE', label: 'Middle' },
+                    { id: 'UPPER', label: 'Upper' },
+                    { id: 'SIDE_LOWER', label: 'Side L' },
+                    { id: 'SIDE_UPPER', label: 'Side U' },
+                  ].map((b) => (
+                    <button
+                      key={b.id}
+                      type="button"
+                      onClick={() => setPreferredBerth(b.id)}
+                      className={`btn btn-xs ${preferredBerth === b.id ? 'btn-primary' : 'btn-secondary'}`}
+                      style={{ fontSize: '0.75rem', padding: '6px 2px', textAlign: 'center' }}
+                    >
+                      {b.label}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-xs text-muted mt-1.5" style={{ fontSize: '0.74rem', lineHeight: 1.3 }}>
+                  ℹ️ <em>Berth preference will be considered during PRS allocation subject to availability, but cannot be guaranteed.</em>
+                </p>
+              </div>
+            </div>
+
+            {/* Prototype Disclaimer Banner */}
+            <div
+              style={{
+                background: 'rgba(245, 158, 11, 0.08)',
+                border: '1px solid rgba(245, 158, 11, 0.3)',
+                borderRadius: 'var(--radius-md)',
+                padding: '8px 10px',
+                marginBottom: 14,
+                fontSize: '0.75rem',
+                color: '#fbbf24',
+              }}
+            >
+              <strong>Prototype Demonstration:</strong> This booking simulates segment vacancy allocation. In production, this handoffs to authorized IRCTC/CRIS PRS for actual ticketing.
             </div>
 
             {/* Fare Summary & CTA */}
             <div className="flex items-center justify-between font-bold text-sm mb-4 pt-3" style={{ borderTop: '1px solid var(--border-default)' }}>
-              <span>Total Segment Fare:</span>
-              <span className="mono" style={{ fontSize: '1.3rem', color: '#10b981' }}>
+              <span>Indicative Fare:</span>
+              <span className="mono" style={{ fontSize: '1.25rem', color: '#10b981' }}>
                 ₹{fare}
               </span>
             </div>
@@ -217,22 +263,22 @@ export const BookingModal: React.FC<BookingModalProps> = ({
               style={{ width: '100%', padding: '10px 14px', fontSize: '0.9rem', fontWeight: 700 }}
               onClick={handleConfirm}
             >
-              ⚡ Confirm & Issue E-Ticket
+              Proceed with Prototype Booking
             </button>
           </div>
         ) : (
-          /* Confirmed E-Ticket Receipt */
+          /* Prototype Booking Receipt */
           <div>
             <div className="text-center pb-3 mb-3" style={{ borderBottom: '1px solid var(--border-default)' }}>
-              <div style={{ fontSize: '2.5rem', marginBottom: 4 }}>🎉</div>
-              <h2 style={{ fontSize: '1.3rem', fontWeight: 800, color: '#10b981' }}>
-                E-Ticket Confirmed!
+              <div style={{ fontSize: '2.5rem', marginBottom: 4 }}>📋</div>
+              <h2 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#38bdf8' }}>
+                Prototype Reservation Logged
               </h2>
-              <div className="mono font-bold mt-1" style={{ fontSize: '1.1rem', color: '#38bdf8' }}>
-                {confirmedBooking.pnr}
+              <div className="mono font-bold mt-1 text-xs px-2 py-1 rounded inline-block" style={{ background: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8' }}>
+                Reference ID: {confirmedBooking.pnr} (SIMULATED)
               </div>
-              <p className="text-muted text-xs">
-                Generated via CRIS Dynamic Reservation Prototype
+              <p className="text-muted text-xs mt-1">
+                Simulated PRS segment allocation demonstration
               </p>
             </div>
 
@@ -246,23 +292,33 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                 <strong className="text-white">{confirmedBooking.fromStation} ➔ {confirmedBooking.toStation}</strong>
               </div>
               <div className="flex items-center justify-between mb-1">
-                <span className="text-muted">Class & Berth:</span>
-                <strong className="text-emerald-400">
-                  Coach {confirmedBooking.coachCode} · Berth #{confirmedBooking.seatNumber} ({confirmedBooking.berthType})
+                <span className="text-muted">Requested Berth:</span>
+                <strong className="text-amber-400">
+                  {confirmedBooking.berthType} (Preference Recorded)
                 </strong>
               </div>
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-muted">Allotted Coach/Seat:</span>
+                <span className="text-muted italic">
+                  Chart Not Prepared · Subject to Final PRS Allocation
+                </span>
+              </div>
               <div className="flex items-center justify-between pt-2 mt-1" style={{ borderTop: '1px solid var(--border-subtle)' }}>
-                <span className="text-muted">Fare Paid:</span>
+                <span className="text-muted">Indicative Fare:</span>
                 <span className="mono font-bold" style={{ color: '#10b981' }}>₹{confirmedBooking.amountPaid}</span>
               </div>
             </div>
+
+            <p className="text-xs text-muted mb-3" style={{ fontSize: '0.74rem' }}>
+              <em>Note: As this is a research prototype for SIH, real tickets must be booked via IRCTC or authorized PRS counters.</em>
+            </p>
 
             <button
               className="btn btn-primary"
               style={{ width: '100%', padding: '9px 12px', fontWeight: 700 }}
               onClick={onClose}
             >
-              Done & View in Profile
+              Done & Return to App
             </button>
           </div>
         )}

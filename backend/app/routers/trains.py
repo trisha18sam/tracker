@@ -21,13 +21,37 @@ from app.schemas import (
     TrainPredictionsOut,
 )
 
+from app.providers.database_provider import DatabaseRailwayProvider
+
 router = APIRouter(prefix="/trains", tags=["trains"])
+
+
+@router.get("/search")
+async def search_trains(
+    q: str = "",
+    from_station: str = None,
+    to_station: str = None,
+    limit: int = 20,
+    db: AsyncSession = Depends(get_async_db),
+):
+    """
+    Search trains by number (e.g. 12951, 12301, 22436), name (e.g. Rajdhani),
+    or corridor from_station/to_station codes.
+    """
+    provider = DatabaseRailwayProvider(db)
+    return await provider.search_trains(
+        query=q,
+        from_station_code=from_station,
+        to_station_code=to_station,
+        limit=limit,
+    )
 
 
 @router.get("", response_model=List[TrainOut])
 async def list_trains(db: AsyncSession = Depends(get_async_db)):
     result = await db.execute(select(Train).where(Train.is_active == True))
     return result.scalars().all()
+
 
 
 @router.get("/{train_id}", response_model=TrainDetailOut)

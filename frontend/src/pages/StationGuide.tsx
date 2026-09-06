@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { api } from '../api';
 import type { Station } from '../types';
 import { IndoorStationMap } from '../components/IndoorStationMap';
+import { DataBadge } from '../components/DataBadge';
 
 export const StationGuide: React.FC = () => {
   const [stations, setStations] = useState<Station[]>([]);
   const [selectedStationId, setSelectedStationId] = useState<number>(1); // NDLS by default
+  const [stationSearch, setStationSearch] = useState('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -134,21 +136,90 @@ export const StationGuide: React.FC = () => {
           Explore station facilities, Foot Over Bridges, waiting lounges, cloak rooms, IRCTC food plazas, and accessibility assistance.
         </p>
 
-        {/* Station Selector Bar */}
-        <div className="flex items-center gap-2 flex-wrap" style={{ marginTop: 14 }}>
-          <span className="text-xs text-muted mono font-bold uppercase">
-            Select Station:
-          </span>
-          {stations.map((st) => (
-            <button
-              key={st.id}
-              className={`btn btn-sm ${selectedStationId === st.id ? 'btn-primary' : 'btn-secondary'}`}
-              style={{ fontSize: '0.78rem', padding: '4px 10px' }}
-              onClick={() => setSelectedStationId(st.id)}
-            >
-              <strong className="mono">{st.code}</strong> · {st.name}
-            </button>
-          ))}
+        {/* Station Search & Selector Bar */}
+        <div style={{ marginTop: 14 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(240px, 1.2fr) 1.5fr', gap: 10, alignItems: 'center' }}>
+            <div>
+              <label className="text-xs text-muted mono uppercase mb-1" style={{ display: 'block' }}>
+                All 105 Stations (Directory):
+              </label>
+              <select
+                value={selectedStationId}
+                onChange={(e) => setSelectedStationId(Number(e.target.value))}
+                style={{
+                  width: '100%',
+                  background: 'var(--bg-input)',
+                  border: '1px solid var(--border-strong)',
+                  borderRadius: 'var(--radius-md)',
+                  padding: '7px 10px',
+                  color: 'var(--text-primary)',
+                  fontSize: '0.82rem',
+                }}
+              >
+                {stations.map(st => (
+                  <option key={st.id} value={st.id}>
+                    {st.code} · {st.name} ({st.zone || 'IR'})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="text-xs text-muted mono uppercase mb-1" style={{ display: 'block' }}>
+                Search by Name or Code:
+              </label>
+              <input
+                type="text"
+                className="input"
+                placeholder="Type name (e.g. Kanpur, Varanasi, Mumbai, Howrah, Chennai, Patna)..."
+                value={stationSearch}
+                onChange={(e) => {
+                  const q = e.target.value;
+                  setStationSearch(q);
+                  if (q.trim()) {
+                    const match = stations.find(s =>
+                      s.name.toLowerCase().includes(q.toLowerCase()) ||
+                      s.code.toLowerCase().includes(q.toLowerCase())
+                    );
+                    if (match) setSelectedStationId(match.id);
+                  }
+                }}
+                style={{ fontSize: '0.82rem', padding: '7px 10px' }}
+              />
+            </div>
+          </div>
+
+          {/* Quick Hub Chips */}
+          <div className="flex items-center gap-2 flex-wrap mt-3 pt-2" style={{ borderTop: '1px solid var(--border-subtle)' }}>
+            <span className="text-xs text-muted mono font-bold uppercase">
+              Major Hubs:
+            </span>
+            {[
+              { code: 'NDLS', label: 'New Delhi' },
+              { code: 'CNB', label: 'Kanpur' },
+              { code: 'MMCT', label: 'Mumbai Central' },
+              { code: 'LKO', label: 'Lucknow' },
+              { code: 'BSB', label: 'Varanasi' },
+              { code: 'HWH', label: 'Howrah' },
+              { code: 'JP', label: 'Jaipur' },
+              { code: 'MAS', label: 'Chennai' },
+              { code: 'SBC', label: 'Bengaluru' },
+              { code: 'ADI', label: 'Ahmedabad' },
+            ].map((hub) => {
+              const st = stations.find(s => s.code === hub.code);
+              if (!st) return null;
+              return (
+                <button
+                  key={hub.code}
+                  className={`btn btn-sm ${selectedStationId === st.id ? 'btn-primary' : 'btn-secondary'}`}
+                  style={{ fontSize: '0.74rem', padding: '3px 8px' }}
+                  onClick={() => setSelectedStationId(st.id)}
+                >
+                  <strong className="mono">{hub.code}</strong> {hub.label}
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
 
@@ -158,6 +229,22 @@ export const StationGuide: React.FC = () => {
         </div>
       ) : selectedStation && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <div className="flex items-center gap-2">
+              <h2 style={{ fontSize: '1.25rem', fontWeight: 800 }}>
+                {selectedStation.name} ({selectedStation.code})
+              </h2>
+              <DataBadge sourceType="DATABASE" label="INDIAN RAILWAYS DIRECTORY" />
+              <DataBadge
+                sourceType={stationDataMock[selectedStation.code] ? 'DATABASE' : 'VENDOR_DEMO'}
+                label={stationDataMock[selectedStation.code] ? 'SCHEMATIC WAYFINDING' : 'GENERAL DIRECTORY'}
+              />
+            </div>
+            <span className="text-xs text-muted mono">
+              Coordinates: {selectedStation.latitude?.toFixed(4)}, {selectedStation.longitude?.toFixed(4)}
+            </span>
+          </div>
           
           {/* Station Overview Info Cards */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>

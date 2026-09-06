@@ -464,10 +464,15 @@ class ETAPrediction(Base):
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-# Re-export Seat Finder Models
+# Re-export Seat Finder Models & Pantry Models
 # ──────────────────────────────────────────────────────────────────────────────
 from app.models_seats import (
     Coach, Seat, SeatOccupancy, SeatWatch, SeatAvailabilityEvent,
     CoachClass, BerthType, OccupancyStatus, SeatEventType,
 )
+from app.models_pantry import (
+    PantryVendor, PantryMenuItem, PantryOrder,
+    PantryCategory, PantryDiet, PantryItemAvailability, PantryPriceSource,
+)
+
 
