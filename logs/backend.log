@@ -1,0 +1,35 @@
+INFO:     Will watch for changes in these directories: ['/home/manas/Desktop/tracker/backend']
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:     Started reloader process [87717] using WatchFiles
+INFO:     Started server process [87720]
+INFO:     Waiting for application startup.
+2026-09-06 08:59:53,920 | INFO     | app.main | Database tables ensured.
+2026-09-06 08:59:54,838 | INFO     | app.prediction.engine | XGBoost model loaded from ../ml/artifacts/xgb_model.joblib
+2026-09-06 08:59:54,839 | INFO     | app.prediction.engine | Scaler loaded from ../ml/artifacts/scaler.joblib
+2026-09-06 08:59:54,839 | INFO     | app.main | ETA prediction engine ready. Model loaded: True
+INFO:     Application startup complete.
+INFO:     127.0.0.1:48574 - "OPTIONS /api/v1/trains HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48574 - "GET /api/v1/trains HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48574 - "GET /api/v1/trains HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48574 - "OPTIONS /api/v1/trains/1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48582 - "OPTIONS /api/v1/trains/1/live HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48584 - "OPTIONS /api/v1/trains/1/predictions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48582 - "GET /api/v1/trains/1/live HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48584 - "GET /api/v1/trains/1/predictions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48574 - "GET /api/v1/trains/1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50700 - "WebSocket /ws/predictions/650" [accepted]
+INFO:     connection open
+2026-09-06 09:00:21,738 | INFO     | app.websocket_manager | WS connected: run_id=650 total=1
+2026-09-06 09:00:32,915 | INFO     | app.websocket_manager | WS disconnected: run_id=650
+INFO:     127.0.0.1:48564 - "GET /api/v1/trains HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48564 - "GET /api/v1/trains HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48568 - "GET /api/v1/trains/1/live HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48574 - "GET /api/v1/trains/1/predictions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48564 - "GET /api/v1/trains/1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48584 - "WebSocket /ws/predictions/650" [accepted]
+INFO:     connection open
+2026-09-06 09:00:40,647 | INFO     | app.websocket_manager | WS connected: run_id=650 total=1
+INFO:     127.0.0.1:50514 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50518 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:47026 - "GET /api/docs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47026 - "GET /openapi.json HTTP/1.1" 200 OK
