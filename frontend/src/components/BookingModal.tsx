@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth, BookingRecord } from '../context/AuthContext';
+import { calculateFare } from '../utils/fareCalculator';
 
 interface BookingModalProps {
   trainNumber: string;
@@ -11,6 +12,9 @@ interface BookingModalProps {
   coachCode?: string;
   seatNumber?: number;
   berthType?: string;
+  fare?: number;
+  fareSource?: string;
+  distanceKm?: number;
   onClose: () => void;
 }
 
@@ -24,6 +28,9 @@ export const BookingModal: React.FC<BookingModalProps> = ({
   coachCode = 'B2',
   seatNumber = 18,
   berthType = 'LOWER',
+  fare: propFare,
+  fareSource = 'IR Telescopic Tariff',
+  distanceKm,
   onClose,
 }) => {
   const { user, addBooking } = useAuth();
@@ -33,14 +40,9 @@ export const BookingModal: React.FC<BookingModalProps> = ({
   const [preferredBerth, setPreferredBerth] = useState<string>(berthType || 'LOWER');
   const [confirmedBooking, setConfirmedBooking] = useState<BookingRecord | null>(null);
 
-  const fareTable: Record<string, number> = {
-    '1A': 2850,
-    '2A': 1650,
-    '3A': 1140,
-    'SL': 430,
-    'CC': 620,
-  };
-  const fare = fareTable[coachClass] || 1140;
+  // Use passed fare or dynamic IR telescopic calculation
+  const computedFareObj = calculateFare(distanceKm || 550, coachClass);
+  const fare = propFare || computedFareObj.fare;
 
   const handleConfirm = () => {
     const booking = addBooking({
@@ -251,11 +253,14 @@ export const BookingModal: React.FC<BookingModalProps> = ({
             </div>
 
             {/* Fare Summary & CTA */}
-            <div className="flex items-center justify-between font-bold text-sm mb-4 pt-3" style={{ borderTop: '1px solid var(--border-default)' }}>
+            <div className="flex items-center justify-between font-bold text-sm mb-1 pt-3" style={{ borderTop: '1px solid var(--border-default)' }}>
               <span>Indicative Fare:</span>
               <span className="mono" style={{ fontSize: '1.25rem', color: '#10b981' }}>
                 ₹{fare}
               </span>
+            </div>
+            <div className="text-right text-xs text-muted mb-4 mono" style={{ fontSize: '0.72rem' }}>
+              {fareSource}
             </div>
 
             <button

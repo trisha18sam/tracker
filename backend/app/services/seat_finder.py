@@ -20,6 +20,7 @@ from app.models import (
     Coach, Seat, SeatOccupancy, SeatWatch, SeatAvailabilityEvent,
     CoachClass, BerthType, OccupancyStatus, SeatEventType,
 )
+from app.services.fare_calculator import calculate_segment_fares
 
 logger = logging.getLogger(__name__)
 
@@ -271,6 +272,16 @@ async def search_segment_seats(
         # Check last-minute departure window (hours from now)
         is_last_minute = True  # Prototype default for demo
 
+        # Calculate authentic segment fares
+        fare_data = calculate_segment_fares(
+            st_from.latitude, st_from.longitude,
+            st_to.latitude, st_to.longitude,
+        )
+        for c_class, summary in class_summaries.items():
+            summary["estimated_fare"] = fare_data["fares"].get(c_class, fare_data["min_fare"])
+            summary["fare_type"] = fare_data["fare_type"]
+            summary["fare_source_label"] = fare_data["fare_source_label"]
+
         results.append({
             "train_id": train.id,
             "train_number": train.number,
@@ -306,6 +317,10 @@ async def search_segment_seats(
             "confidence_reason": confidence_reason,
             "classes": list(class_summaries.values()),
             "is_last_minute": is_last_minute,
+            "min_fare": fare_data["min_fare"],
+            "distance_km": fare_data["distance_km"],
+            "fare_type": fare_data["fare_type"],
+            "fare_disclaimer": fare_data["fare_disclaimer"],
             "recent_cancellations": [
                 {
                     "details": ev.details,

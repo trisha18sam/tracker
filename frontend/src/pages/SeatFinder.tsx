@@ -43,6 +43,8 @@ export const SeatFinder: React.FC = () => {
     coachCode?: string;
     seatNumber?: number;
     berthType?: string;
+    fare?: number;
+    fareSource?: string;
   } | null>(null);
 
   // Coach Map Modal state
@@ -201,6 +203,9 @@ export const SeatFinder: React.FC = () => {
       preferredClass ||
       (train.classes.length > 0 ? train.classes[0].coach_class : '3A');
 
+    const clsObj = train.classes.find(c => c.coach_class === selectedCls);
+    const fare = (clsObj as any)?.estimated_fare || (train as any).min_fare || 1145;
+
     const proceedWithBooking = () => {
       setBookingData({
         trainNumber: train.train_number,
@@ -212,6 +217,8 @@ export const SeatFinder: React.FC = () => {
         coachCode: coachCode || 'B2',
         seatNumber: seatNumber || 18,
         berthType: berthType || 'LOWER',
+        fare,
+        fareSource: (clsObj as any)?.fare_source_label || 'Estimated Fare (IR Telescopic Tariff)',
       });
     };
 
@@ -659,6 +666,13 @@ export const SeatFinder: React.FC = () => {
                             </span>
                           </div>
 
+                          {(cls as any).estimated_fare && (
+                            <div className="flex items-center justify-between pt-1 pb-1 font-bold text-xs" style={{ color: '#10b981', borderBottom: '1px solid var(--border-subtle)' }}>
+                              <span className="text-muted font-normal" style={{ fontSize: '0.68rem' }}>Fare:</span>
+                              <span className="mono">₹{(cls as any).estimated_fare}</span>
+                            </div>
+                          )}
+
                           <div style={{ margin: '6px 0', fontSize: '0.75rem' }}>
                             <div className="flex items-center justify-between" style={{ color: '#10b981' }}>
                               <span>Confirmed Vacant:</span>
@@ -1030,6 +1044,8 @@ export const SeatFinder: React.FC = () => {
           coachCode={bookingData.coachCode}
           seatNumber={bookingData.seatNumber}
           berthType={bookingData.berthType}
+          fare={bookingData.fare}
+          fareSource={bookingData.fareSource}
           onClose={() => setBookingData(null)}
         />
       )}

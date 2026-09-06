@@ -13,7 +13,7 @@ import { ProfileDrawer } from './components/ProfileDrawer';
 import './index.css';
 
 function AppContent() {
-  const { user, openAuthModal } = useAuth();
+  const { user, currentJourney, openAuthModal } = useAuth();
   const [currentTime, setCurrentTime] = useState<string>('');
   const [profileOpen, setProfileOpen] = useState(false);
 
@@ -61,7 +61,7 @@ function AppContent() {
             end
             className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}
           >
-            Passenger View
+            Plan & Track
           </NavLink>
           <NavLink
             to="/seat-finder"
@@ -100,6 +100,31 @@ function AppContent() {
             SIH Demo
           </NavLink>
         </div>
+
+        {/* Active Journey Pill if exists */}
+        {currentJourney && (
+          <NavLink
+            to="/"
+            className="badge"
+            style={{
+              background: 'rgba(56, 189, 248, 0.15)',
+              border: '1px solid rgba(56, 189, 248, 0.4)',
+              color: '#38bdf8',
+              textDecoration: 'none',
+              fontSize: '0.72rem',
+              padding: '3px 8px',
+              borderRadius: 4,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 4,
+              marginLeft: 8,
+            }}
+            title="View current active journey"
+          >
+            <span>🚆</span>
+            <span>#{currentJourney.trainNumber} Active</span>
+          </NavLink>
+        )}
 
         {/* Right Header Status & User Profile Bar */}
         <div className="navbar-right">

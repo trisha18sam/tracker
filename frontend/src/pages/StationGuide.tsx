@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { api } from '../api';
 import type { Station } from '../types';
 import { IndoorStationMap } from '../components/IndoorStationMap';
 import { DataBadge } from '../components/DataBadge';
+import { useAuth } from '../context/AuthContext';
 
 export const StationGuide: React.FC = () => {
+  const [searchParams] = useSearchParams();
+  const { currentJourney } = useAuth();
   const [stations, setStations] = useState<Station[]>([]);
   const [selectedStationId, setSelectedStationId] = useState<number>(1); // NDLS by default
   const [stationSearch, setStationSearch] = useState('');
@@ -14,11 +18,22 @@ export const StationGuide: React.FC = () => {
     api.getStations()
       .then((data) => {
         setStations(data);
-        if (data.length > 0) setSelectedStationId(data[0].id);
+        const codeParam = searchParams.get('code');
+        if (codeParam) {
+          const match = data.find(s => s.code.toUpperCase() === codeParam.toUpperCase());
+          if (match) setSelectedStationId(match.id);
+          else if (data.length > 0) setSelectedStationId(data[0].id);
+        } else if (currentJourney) {
+          const match = data.find(s => s.code.toUpperCase() === currentJourney.destCode.toUpperCase());
+          if (match) setSelectedStationId(match.id);
+          else if (data.length > 0) setSelectedStationId(data[0].id);
+        } else if (data.length > 0) {
+          setSelectedStationId(data[0].id);
+        }
         setLoading(false);
       })
       .catch(() => setLoading(false));
-  }, []);
+  }, [searchParams, currentJourney]);
 
   const selectedStation = stations.find((s) => s.id === selectedStationId) || stations[0];
 
@@ -135,6 +150,40 @@ export const StationGuide: React.FC = () => {
         <p className="text-secondary" style={{ marginTop: 4, maxWidth: 850 }}>
           Explore station facilities, Foot Over Bridges, waiting lounges, cloak rooms, IRCTC food plazas, and accessibility assistance.
         </p>
+
+        {currentJourney && (
+          <div
+            className="card mt-3 mb-2"
+            style={{
+              background: 'rgba(14, 165, 233, 0.1)',
+              border: '1px solid rgba(56, 189, 248, 0.3)',
+              padding: '10px 14px',
+              borderRadius: 'var(--radius-md)',
+            }}
+          >
+            <div className="flex items-center justify-between flex-wrap gap-2 text-xs">
+              <div>
+                <span className="text-sky-400 font-bold uppercase tracking-wider">Active Trip: </span>
+                <span className="text-white">
+                  Train #{currentJourney.trainNumber} ({currentJourney.sourceCode} ➔ {currentJourney.destCode})
+                </span>
+                <span className="text-muted ml-2">
+                  Destination: <strong>{currentJourney.destName} ({currentJourney.destCode})</strong>
+                </span>
+              </div>
+              <button
+                className="btn btn-xs btn-primary"
+                style={{ fontSize: '0.72rem', padding: '3px 8px' }}
+                onClick={() => {
+                  const match = stations.find(s => s.code.toUpperCase() === currentJourney.destCode.toUpperCase());
+                  if (match) setSelectedStationId(match.id);
+                }}
+              >
+                View Destination Facilities ({currentJourney.destCode})
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Station Search & Selector Bar */}
         <div style={{ marginTop: 14 }}>

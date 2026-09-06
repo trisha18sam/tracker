@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { api } from '../api';
 import { useAuth, PantryOrderRecord } from '../context/AuthContext';
 import { DataBadge } from '../components/DataBadge';
@@ -19,13 +20,44 @@ interface FoodItem {
 }
 
 export const PantryServices: React.FC = () => {
-  const { user, openAuthModal, addPantryOrder } = useAuth();
+  const [searchParams] = useSearchParams();
+  const { user, currentJourney, openAuthModal, addPantryOrder } = useAuth();
 
   const [selectedTrain, setSelectedTrain] = useState('12952 Mumbai Rajdhani Express');
   const [deliveryStation, setDeliveryStation] = useState('Kanpur Central (CNB)');
   const [coachCode, setCoachCode] = useState('B2');
   const [seatNumber, setSeatNumber] = useState(18);
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
+
+  // Pre-fill from URL param or active journey
+  useEffect(() => {
+    const trainParam = searchParams.get('train');
+    if (trainParam) {
+      const trainOptions = [
+        '12952 Mumbai Rajdhani Express',
+        '12004 Lucknow Shatabdi Express',
+        '22436 Vande Bharat Express',
+        '12301 Howrah Rajdhani Express',
+        '12626 Kerala Express',
+        '12957 Ahmedabad Rajdhani',
+      ];
+      const match = trainOptions.find(t => t.includes(trainParam));
+      if (match) setSelectedTrain(match);
+    } else if (currentJourney) {
+      const trainOptions = [
+        '12952 Mumbai Rajdhani Express',
+        '12004 Lucknow Shatabdi Express',
+        '22436 Vande Bharat Express',
+        '12301 Howrah Rajdhani Express',
+        '12626 Kerala Express',
+        '12957 Ahmedabad Rajdhani',
+      ];
+      const match = trainOptions.find(t => t.includes(currentJourney.trainNumber));
+      if (match) setSelectedTrain(match);
+      if (currentJourney.coach) setCoachCode(currentJourney.coach);
+      if (currentJourney.seatNumber) setSeatNumber(Number(currentJourney.seatNumber));
+    }
+  }, [searchParams, currentJourney]);
 
   // Cart state: item_id -> quantity
   const [cart, setCart] = useState<Record<string, number>>({});
@@ -357,6 +389,33 @@ export const PantryServices: React.FC = () => {
         <p className="text-secondary" style={{ marginTop: 4, maxWidth: 850 }}>
           Order hygienic, freshly prepared meals and beverages delivered directly to your berth at designated intermediate stoppage stations.
         </p>
+
+        {currentJourney && (
+          <div
+            className="card mt-3 mb-2"
+            style={{
+              background: 'rgba(245, 158, 11, 0.1)',
+              border: '1px solid rgba(245, 158, 11, 0.3)',
+              padding: '10px 14px',
+              borderRadius: 'var(--radius-md)',
+            }}
+          >
+            <div className="flex items-center justify-between flex-wrap gap-2 text-xs">
+              <div>
+                <span className="text-amber-400 font-bold uppercase tracking-wider">Active Trip Detected: </span>
+                <span className="text-white">
+                  Train #{currentJourney.trainNumber} ({currentJourney.sourceCode} ➔ {currentJourney.destCode})
+                </span>
+                <span className="text-muted ml-2">
+                  Delivering to Coach <strong>{coachCode}</strong>, Seat <strong>{seatNumber}</strong>
+                </span>
+              </div>
+              <span className="badge" style={{ background: 'rgba(245, 158, 11, 0.2)', color: '#f59e0b', fontSize: '0.7rem' }}>
+                Auto-filled for #{currentJourney.trainNumber}
+              </span>
+            </div>
+          </div>
+        )}
 
         {/* Delivery Details Bar */}
         <div

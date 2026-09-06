@@ -24,6 +24,7 @@ from app.models_pantry import (
 from app.providers.base import (
     RailwayDataProvider, DataSourceType, DataProvenance,
 )
+from app.services.fare_calculator import calculate_segment_fares
 
 logger = logging.getLogger(__name__)
 
@@ -178,6 +179,33 @@ class DatabaseRailwayProvider(RailwayDataProvider):
 
         matching_trains = matching_trains[:limit]
 
+        train_items = []
+        for t in matching_trains:
+            orig_lat = t.route.origin_station.latitude if t.route and t.route.origin_station else None
+            orig_lon = t.route.origin_station.longitude if t.route and t.route.origin_station else None
+            dest_lat = t.route.destination_station.latitude if t.route and t.route.destination_station else None
+            dest_lon = t.route.destination_station.longitude if t.route and t.route.destination_station else None
+            fare_data = calculate_segment_fares(orig_lat, orig_lon, dest_lat, dest_lon)
+
+            train_items.append({
+                "id": t.id,
+                "number": t.number,
+                "name": t.name,
+                "type": t.train_type.value,
+                "rake_type": t.rake_type,
+                "max_speed_kmh": t.max_speed_kmh,
+                "origin": t.route.origin_station.code if t.route and t.route.origin_station else None,
+                "origin_name": t.route.origin_station.name if t.route and t.route.origin_station else None,
+                "destination": t.route.destination_station.code if t.route and t.route.destination_station else None,
+                "destination_name": t.route.destination_station.name if t.route and t.route.destination_station else None,
+                "stops_count": len(t.scheduled_stops),
+                "estimated_fares": fare_data["fares"],
+                "min_fare": fare_data["min_fare"],
+                "distance_km": fare_data["distance_km"],
+                "fare_type": fare_data["fare_type"],
+                "fare_disclaimer": fare_data["fare_disclaimer"],
+            })
+
         return {
             "provenance": DataProvenance(
                 source_type=DataSourceType.DATABASE,
@@ -186,22 +214,7 @@ class DatabaseRailwayProvider(RailwayDataProvider):
             ).to_dict(),
             "query": query,
             "count": len(matching_trains),
-            "trains": [
-                {
-                    "id": t.id,
-                    "number": t.number,
-                    "name": t.name,
-                    "type": t.train_type.value,
-                    "rake_type": t.rake_type,
-                    "max_speed_kmh": t.max_speed_kmh,
-                    "origin": t.route.origin_station.code if t.route and t.route.origin_station else None,
-                    "origin_name": t.route.origin_station.name if t.route and t.route.origin_station else None,
-                    "destination": t.route.destination_station.code if t.route and t.route.destination_station else None,
-                    "destination_name": t.route.destination_station.name if t.route and t.route.destination_station else None,
-                    "stops_count": len(t.scheduled_stops),
-                }
-                for t in matching_trains
-            ],
+            "trains": train_items,
         }
 
     async def get_train_detail(self, train_id_or_number: str | int) -> Optional[Dict[str, Any]]:

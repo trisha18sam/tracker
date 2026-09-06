@@ -308,6 +308,9 @@ class SeatClassSummaryOut(BaseModel):
     total_berths: int
     berth_breakdown: Dict[str, int]
     deboarding_stations: Dict[str, int] = {}
+    estimated_fare: Optional[int] = None
+    fare_type: Optional[str] = "CALCULATED_ESTIMATE"
+    fare_source_label: Optional[str] = "Estimated Fare"
 
 
 class RecentCancellationOut(BaseModel):
@@ -341,6 +344,10 @@ class SeatSearchResultOut(BaseModel):
     classes: List[SeatClassSummaryOut]
     is_last_minute: bool = True
     recent_cancellations: List[RecentCancellationOut] = []
+    min_fare: Optional[int] = None
+    distance_km: Optional[float] = None
+    fare_type: str = "CALCULATED_ESTIMATE"
+    fare_disclaimer: Optional[str] = None
 
 
 class SeatGridItemOut(BaseModel):

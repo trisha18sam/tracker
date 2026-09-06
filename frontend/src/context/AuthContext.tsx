@@ -31,6 +31,23 @@ export interface PantryOrderRecord {
   orderedAt: string;
 }
 
+export interface ActiveJourney {
+  trainNumber: string;
+  trainName: string;
+  sourceCode: string;
+  sourceName: string;
+  destCode: string;
+  destName: string;
+  travelDate?: string;
+  travelClass?: string;
+  fare?: number;
+  fareSource?: string;
+  pnr?: string;
+  coach?: string;
+  seatNumber?: number | string;
+  berthType?: string;
+}
+
 export interface UserProfile {
   authenticated: boolean;
   guest: boolean;
@@ -60,6 +77,12 @@ interface AuthContextType {
   addBooking: (booking: Omit<BookingRecord, 'id' | 'pnr' | 'bookedAt' | 'status'>) => BookingRecord;
   addPantryOrder: (order: Omit<PantryOrderRecord, 'id' | 'orderNumber' | 'orderedAt' | 'status'>) => PantryOrderRecord;
   addRecentSearch: (query: string) => void;
+  // Journey state
+  currentJourney: ActiveJourney | null;
+  setCurrentJourney: (journey: ActiveJourney | null) => void;
+  clearJourney: () => void;
+  pendingBookingData: any | null;
+  setPendingBookingData: (data: any | null) => void;
   // Context-aware guard helpers
   authModalOpen: boolean;
   authTitle: string;
@@ -86,6 +109,7 @@ const GUEST_DEFAULT: UserProfile = {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const AUTH_STORAGE_KEY = 'trackiq_user_session';
+const JOURNEY_STORAGE_KEY = 'trackiq_active_journey';
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<UserProfile>(() => {
@@ -98,6 +122,33 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     } catch (_) {}
     return GUEST_DEFAULT;
   });
+
+  const [currentJourney, setCurrentJourneyState] = useState<ActiveJourney | null>(() => {
+    try {
+      const stored = localStorage.getItem(JOURNEY_STORAGE_KEY);
+      if (stored) {
+        return JSON.parse(stored);
+      }
+    } catch (_) {}
+    return null;
+  });
+
+  const [pendingBookingData, setPendingBookingData] = useState<any | null>(null);
+
+  const setCurrentJourney = (journey: ActiveJourney | null) => {
+    setCurrentJourneyState(journey);
+    try {
+      if (journey) {
+        localStorage.setItem(JOURNEY_STORAGE_KEY, JSON.stringify(journey));
+      } else {
+        localStorage.removeItem(JOURNEY_STORAGE_KEY);
+      }
+    } catch (_) {}
+  };
+
+  const clearJourney = () => {
+    setCurrentJourney(null);
+  };
 
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authTitle, setAuthTitle] = useState('Almost there.');
@@ -172,6 +223,25 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       ...prev,
       bookings: [newRecord, ...prev.bookings],
     }));
+
+    // Auto-sync current active journey
+    setCurrentJourney({
+      trainNumber: booking.trainNumber,
+      trainName: booking.trainName,
+      sourceCode: booking.fromStation,
+      sourceName: booking.fromStation,
+      destCode: booking.toStation,
+      destName: booking.toStation,
+      travelDate: booking.date,
+      travelClass: booking.coachClass,
+      fare: booking.amountPaid,
+      fareSource: 'IR Telescopic Tariff',
+      pnr,
+      coach: booking.coachCode,
+      seatNumber: booking.seatNumber,
+      berthType: booking.berthType,
+    });
+
     return newRecord;
   };
 
@@ -241,6 +311,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         addBooking,
         addPantryOrder,
         addRecentSearch,
+        currentJourney,
+        setCurrentJourney,
+        clearJourney,
+        pendingBookingData,
+        setPendingBookingData,
         authModalOpen,
         authTitle,
         authSubtitle,
