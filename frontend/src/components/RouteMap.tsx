@@ -55,14 +55,15 @@ export default function RouteMap({
       center: [24.8, 75.0],
       zoom: 6,
       zoomControl: true,
-      attributionControl: false,
+      attributionControl: true,
     });
 
+    // Free tile layer — OpenStreetMap (no API key, no watermark)
     L.tileLayer(
-      'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+      'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
       {
-        maxZoom: 18,
-        subdomains: 'abcd',
+        maxZoom: 19,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
       }
     ).addTo(map);
 
@@ -181,15 +182,18 @@ export default function RouteMap({
         width: 26px;
         height: 26px;
         background-color: ${color};
-        border: 2px solid #ffffff;
+        border: 3px solid #ffffff;
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 12px;
+        font-size: 10px;
+        font-weight: 900;
+        color: #ffffff;
         box-shadow: 0 0 14px ${color};
         cursor: pointer;
-      ">🚆</div>
+        font-family: monospace;
+      ">T</div>
     `;
 
     const icon = L.divIcon({
