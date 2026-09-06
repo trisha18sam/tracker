@@ -4,6 +4,7 @@ fastapi>=0.111.0
 uvicorn[standard]>=0.29.0
 sqlalchemy[asyncio]>=2.0.30
 asyncpg>=0.29.0
+aiosqlite>=0.20.0
 # psycopg2 is only needed for sync DB access (seed scripts, evaluation).
 # On Windows, use the pre-built wheel via:
 #   pip install psycopg2-binary --only-binary :all:

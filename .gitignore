@@ -1,0 +1,26 @@
+# Environments
+.venv/
+venv/
+ENV/
+env/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Environment files
+.env
+!.env.example
+
+# Node / Frontend
+frontend/node_modules/
+frontend/dist/
+node_modules/
+dist/
+
+# Logs & SQLite DB
+*.log
+logs/
+tracker.db
