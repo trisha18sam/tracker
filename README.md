@@ -1,6 +1,6 @@
 # SIH26028 — Dynamic ETA Forecast for Coaching Trains
 
-> **Smart India Hackathon 2026 Prototype**
+> **Smart India Hackathon 2026 Prototype**  
 > ⚠️ All data is **SIMULATION/DEMO DATA** — not real Indian Railways data.
 
 ---
@@ -46,51 +46,77 @@ FastAPI Backend
 ### Prerequisites
 - Python 3.11+
 - Node.js 20+
-- PostgreSQL 15
-- (Optional) Docker + Docker Compose
 
-### 1. Database
+> **Note:** This project uses **SQLite by default** — no PostgreSQL required for local development.
+
+### Option A: Single Command (Recommended)
 
 ```bash
-# Start PostgreSQL (or use Docker)
-docker run -d --name eta-db -e POSTGRES_USER=sih -e POSTGRES_PASSWORD=sih_password \
-  -e POSTGRES_DB=eta_forecast -p 5432:5432 postgres:15-alpine
+./start.sh
 ```
 
-### 2. Copy and configure `.env`
+This script will:
+1. Create virtual environment
+2. Install all Python dependencies (backend, simulation, ML)
+3. Install frontend dependencies
+4. Seed the database (first run only)
+5. Start backend on port 8000
+6. Start frontend on port 5173
+
+**Services:**
+- Frontend: http://localhost:5173
+- Backend API: http://localhost:8000
+- API Docs: http://localhost:8000/api/docs
+
+Press `Ctrl+C` to stop all services.
+
+---
+
+### Option B: Manual Step-by-Step
+
+#### 1. Copy and configure `.env`
 
 ```bash
 cp .env.example .env
-# Edit DATABASE_URL and DATABASE_SYNC_URL if needed
+# The default .env uses SQLite (tracker.db) — works out of the box
 ```
 
-### 3. Backend + seed
+#### 2. Set up Python virtual environment & install dependencies
 
 ```bash
-cd backend
-pip install -r requirements.txt
+python3 -m venv venv
+source venv/bin/activate
 
-cd ../database
-python seed.py          # Creates tables, seeds stations/trains/schedules + 2000 synthetic journeys
+# Install all Python dependencies
+pip install -r backend/requirements.txt
+pip install -r simulation/requirements.txt
+pip install -r ml/requirements.txt   # Optional: for ML training
+pip install aiosqlite                # Required for SQLite async support
 ```
 
-### 4. Train ML model
+#### 3. Seed the database
+
+```bash
+cd database
+python seed.py          # Creates tables, seeds stations/trains/schedules + synthetic journeys
+```
+
+#### 4. Train ML model (optional, for full predictions)
 
 ```bash
 cd ml
-pip install -r requirements.txt
 python training/train_model.py        # Trains XGBoost, saves artifacts
 python training/evaluate_model.py     # Computes real MAE/RMSE vs baselines
 ```
 
-### 5. Start backend
+#### 5. Start backend
 
 ```bash
 cd backend
 uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-### 6. Start frontend
+#### 6. Start frontend
 
 ```bash
 cd frontend
@@ -99,17 +125,16 @@ npm run dev
 # Open http://localhost:5173
 ```
 
-### 7. Start simulation engine
+#### 7. Start simulation engine
 
 ```bash
 cd simulation
-pip install -r requirements.txt
 python engine.py --train-id 1 --delay 0      # On-time run
 # or
 python engine.py --train-id 1 --delay 15     # 15-minute late start
 ```
 
-### 8. Docker (all services)
+#### 8. Docker (all services)
 
 ```bash
 cd docker
