@@ -132,8 +132,16 @@ async def inject_event(payload: EventIn, db: AsyncSession = Depends(get_async_db
         injected_by="DEMO_MODE",
     )
     db.add(event)
-    await db.flush()
+    await db.commit()
     await db.refresh(event)
+
+    # Immediately recalculate and broadcast updated ETAs via WebSocket
+    try:
+        from app.routers.telemetry import _predict_and_broadcast
+        await _predict_and_broadcast(run_id=payload.run_id)
+    except Exception as e:
+        logger.exception(f"Error re-predicting after event injection: {e}")
+
     return event
 
 
@@ -145,5 +153,50 @@ async def clear_event(event_id: int, db: AsyncSession = Depends(get_async_db)):
     if not ev:
         raise HTTPException(status_code=404, detail="Event not found")
     ev.end_time = datetime.utcnow()
-    await db.flush()
+    run_id = ev.run_id
+    await db.commit()
+
+    # Immediately recalculate and broadcast cleared status via WebSocket
+    try:
+        from app.routers.telemetry import _predict_and_broadcast
+        await _predict_and_broadcast(run_id=run_id)
+    except Exception as e:
+        logger.exception(f"Error re-predicting after event clear: {e}")
+
     return {"message": "Event cleared", "event_id": event_id}
+
+
+@router.post("/reset-demo")
+async def reset_demo(db: AsyncSession = Depends(get_async_db)):
+    """
+    Reset demo state for SIH presentation:
+    1. Ends all active operational disruptions/events.
+    2. Resets train delay to baseline.
+    3. Triggers prediction recalculation & WS broadcast for active demo runs.
+    """
+    from sqlalchemy import update
+    # End all active events
+    await db.execute(
+        update(OperationalEvent)
+        .where(OperationalEvent.end_time.is_(None))
+        .values(end_time=datetime.utcnow())
+    )
+
+    # Reset demo runs
+    runs_q = await db.execute(select(TrainRun))
+    runs = runs_q.scalars().all()
+    for r in runs:
+        r.current_delay_min = r.origin_delay_min or 0
+        r.status = RunStatus.RUNNING if r.journey_start_time else RunStatus.SCHEDULED
+
+    await db.commit()
+
+    # Re-predict and broadcast reset predictions
+    from app.routers.telemetry import _predict_and_broadcast
+    for r in runs:
+        try:
+            await _predict_and_broadcast(run_id=r.id)
+        except Exception as e:
+            logger.warning(f"Failed to broadcast reset for run {r.id}: {e}")
+
+    return {"success": True, "message": "Demo state reset successfully: events cleared and ETAs re-calculated."}

@@ -83,20 +83,47 @@ async def ingest_telemetry(
     return tel
 
 
-async def _predict_and_broadcast(run_id: int, tel_id: int, payload: TelemetryIn) -> None:
-    """Run in background: predict → persist → WS broadcast."""
+async def _predict_and_broadcast(run_id: int, tel_id: int | None = None, payload: TelemetryIn | None = None) -> None:
+    """Run in background or inline: predict → persist → WS broadcast."""
     from app.database import AsyncSessionLocal
-    from app.models import Train
+    from app.models import Train, TrainTelemetry, TrainRun, OperationalEvent
 
     async with AsyncSessionLocal() as db:
         try:
-            # Re-fetch telemetry with its id
-            tel_q = await db.execute(
-                select(TrainTelemetry).where(TrainTelemetry.id == tel_id)
-            )
-            tel = tel_q.scalar_one_or_none()
+            tel = None
+            if tel_id is not None:
+                # Re-fetch telemetry with its id
+                tel_q = await db.execute(
+                    select(TrainTelemetry).where(TrainTelemetry.id == tel_id)
+                )
+                tel = tel_q.scalar_one_or_none()
+
             if not tel:
-                return
+                tel_q = await db.execute(
+                    select(TrainTelemetry)
+                    .where(TrainTelemetry.run_id == run_id)
+                    .order_by(desc(TrainTelemetry.timestamp))
+                )
+                tel = tel_q.scalars().first()
+
+            if not tel:
+                run_q = await db.execute(select(TrainRun).where(TrainRun.id == run_id))
+                run = run_q.scalar_one_or_none()
+                if not run:
+                    return
+                tel = TrainTelemetry(
+                    run_id=run_id,
+                    timestamp=datetime.utcnow(),
+                    latitude=28.6139,
+                    longitude=77.2090,
+                    speed_kmh=80.0,
+                    distance_covered_km=0.0,
+                    cumulative_delay_min=run.current_delay_min or 0.0,
+                    data_source=run.data_source,
+                )
+                db.add(tel)
+                await db.commit()
+                await db.refresh(tel)
 
             predictions = await run_prediction_pipeline(db, run_id, tel)
             await db.commit()

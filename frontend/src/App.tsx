@@ -10,6 +10,7 @@ import { StationGuide } from './pages/StationGuide';
 import { PantryServices } from './pages/PantryServices';
 import { AuthModal } from './components/AuthModal';
 import { ProfileDrawer } from './components/ProfileDrawer';
+import { DemoWalkthroughBar } from './components/DemoWalkthroughBar';
 import './index.css';
 
 function AppContent() {
@@ -196,6 +197,7 @@ function AppContent() {
         <Routes>
           <Route path="/" element={<PassengerApp />} />
           <Route path="/seat-finder" element={<SeatFinder />} />
+          <Route path="/seats" element={<Navigate to="/seat-finder" replace />} />
           <Route path="/find-seat" element={<Navigate to="/seat-finder" replace />} />
           <Route path="/pantry" element={<PantryServices />} />
           <Route path="/stations" element={<StationGuide />} />
@@ -206,6 +208,9 @@ function AppContent() {
           <Route path="/demo" element={<DemoMode />} />
         </Routes>
       </main>
+
+      {/* SIH Evaluation 22-Step Controller */}
+      <DemoWalkthroughBar />
 
       {/* Context-Aware Global Auth Modal & Profile Drawer */}
       <AuthModal />

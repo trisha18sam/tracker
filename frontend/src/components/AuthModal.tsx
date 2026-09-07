@@ -155,6 +155,46 @@ export const AuthModal: React.FC = () => {
           </div>
         )}
 
+        {/* 1-Click SIH Judge & Demo Login */}
+        <div style={{ marginBottom: 16 }}>
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={() => {
+              setLoading(true);
+              setTimeout(() => {
+                login('rahul.sharma@railmail.in', '9876543210', 'Rahul Sharma');
+                setLoading(false);
+              }, 250);
+            }}
+            disabled={loading}
+            style={{
+              width: '100%',
+              padding: '10px 14px',
+              fontSize: '0.88rem',
+              fontWeight: 800,
+              background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
+              border: '1px solid #38bdf8',
+              boxShadow: '0 0 15px rgba(56, 189, 248, 0.3)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 8,
+            }}
+          >
+            <span>⚡</span> 1-Click Judge / Demo Sign-In (Rahul Sharma)
+          </button>
+          <div className="text-center text-xs text-muted" style={{ marginTop: 6, fontSize: '0.72rem' }}>
+            Instant authenticated session · Zero typing required for hackathon review
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 mb-3">
+          <div style={{ flex: 1, height: 1, background: 'var(--border-default)' }} />
+          <span className="text-xs text-muted mono uppercase">or enter manually</span>
+          <div style={{ flex: 1, height: 1, background: 'var(--border-default)' }} />
+        </div>
+
         {/* Form */}
         <form onSubmit={handleSubmit}>
           {!isSignInMode && (

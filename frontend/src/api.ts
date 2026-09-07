@@ -46,6 +46,7 @@ export const api = {
   startSimulation:      (payload: unknown) => apiFetch('/simulation/start', { method: 'POST', body: JSON.stringify(payload) }),
   injectEvent:          (payload: unknown) => apiFetch('/simulation/events', { method: 'POST', body: JSON.stringify(payload) }),
   clearEvent:           (id: number) => apiFetch(`/simulation/events/${id}`, { method: 'DELETE' }),
+  resetDemo:            () => apiFetch<{ success: boolean; message: string }>('/simulation/reset-demo', { method: 'POST' }),
 
   /* Last-Minute Seat Finder */
   searchSeats: (params: { from_station_id: number; to_station_id: number; travel_date?: string; coach_class?: string; berth_type?: string }) => {

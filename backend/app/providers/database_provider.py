@@ -145,6 +145,7 @@ class DatabaseRailwayProvider(RailwayDataProvider):
             selectinload(Train.route).selectinload(Route.origin_station),
             selectinload(Train.route).selectinload(Route.destination_station),
             selectinload(Train.scheduled_stops).selectinload(ScheduledStop.station),
+            selectinload(Train.coaches),
         )
 
         if q:
@@ -181,11 +182,65 @@ class DatabaseRailwayProvider(RailwayDataProvider):
 
         train_items = []
         for t in matching_trains:
-            orig_lat = t.route.origin_station.latitude if t.route and t.route.origin_station else None
-            orig_lon = t.route.origin_station.longitude if t.route and t.route.origin_station else None
-            dest_lat = t.route.destination_station.latitude if t.route and t.route.destination_station else None
-            dest_lon = t.route.destination_station.longitude if t.route and t.route.destination_station else None
+            # Check if search was for a specific segment
+            from_stop = None
+            to_stop = None
+            if from_station_code and to_station_code:
+                f_code = from_station_code.strip().upper()
+                t_code = to_station_code.strip().upper()
+                from_stop = next((s for s in t.scheduled_stops if s.station and s.station.code.upper() == f_code), None)
+                to_stop = next((s for s in t.scheduled_stops if s.station and s.station.code.upper() == t_code), None)
+
+            if from_stop and to_stop and from_stop.station and to_stop.station:
+                orig_code = from_stop.station.code
+                orig_name = from_stop.station.name
+                orig_lat = from_stop.station.latitude
+                orig_lon = from_stop.station.longitude
+                dest_code = to_stop.station.code
+                dest_name = to_stop.station.name
+                dest_lat = to_stop.station.latitude
+                dest_lon = to_stop.station.longitude
+                dep_time = from_stop.departure_time_str or from_stop.arrival_time_str or "06:00"
+                arr_time = to_stop.arrival_time_str or to_stop.departure_time_str or "12:00"
+            else:
+                orig_code = t.route.origin_station.code if t.route and t.route.origin_station else None
+                orig_name = t.route.origin_station.name if t.route and t.route.origin_station else None
+                orig_lat = t.route.origin_station.latitude if t.route and t.route.origin_station else None
+                orig_lon = t.route.origin_station.longitude if t.route and t.route.origin_station else None
+                dest_code = t.route.destination_station.code if t.route and t.route.destination_station else None
+                dest_name = t.route.destination_station.name if t.route and t.route.destination_station else None
+                dest_lat = t.route.destination_station.latitude if t.route and t.route.destination_station else None
+                dest_lon = t.route.destination_station.longitude if t.route and t.route.destination_station else None
+                dep_time = "16:55"
+                arr_time = "08:35"
+
             fare_data = calculate_segment_fares(orig_lat, orig_lon, dest_lat, dest_lon)
+
+            # Filter fares to only classes that actually exist on this train rake
+            train_classes = set()
+            try:
+                for c in getattr(t, "coaches", []):
+                    if hasattr(c, "coach_class") and c.coach_class:
+                        train_classes.add(c.coach_class.value)
+            except Exception:
+                pass
+
+            if not train_classes:
+                tt = t.train_type.value if hasattr(t.train_type, "value") else str(t.train_type)
+                if tt == "RAJDHANI":
+                    train_classes = {"3A", "2A", "1A"}
+                elif tt in ("SHATABDI", "VANDE_BHARAT"):
+                    train_classes = {"CC", "EC"}
+                elif tt in ("EXPRESS", "MAIL"):
+                    train_classes = {"SL", "3A", "2A"}
+                else:
+                    train_classes = {"2S", "SL", "3A"}
+
+            if train_classes:
+                filtered_fares = {cls: fare for cls, fare in fare_data["fares"].items() if cls in train_classes}
+                if filtered_fares:
+                    fare_data["fares"] = filtered_fares
+                    fare_data["min_fare"] = min(filtered_fares.values())
 
             train_items.append({
                 "id": t.id,
@@ -194,10 +249,12 @@ class DatabaseRailwayProvider(RailwayDataProvider):
                 "type": t.train_type.value,
                 "rake_type": t.rake_type,
                 "max_speed_kmh": t.max_speed_kmh,
-                "origin": t.route.origin_station.code if t.route and t.route.origin_station else None,
-                "origin_name": t.route.origin_station.name if t.route and t.route.origin_station else None,
-                "destination": t.route.destination_station.code if t.route and t.route.destination_station else None,
-                "destination_name": t.route.destination_station.name if t.route and t.route.destination_station else None,
+                "origin": orig_code,
+                "origin_name": orig_name,
+                "destination": dest_code,
+                "destination_name": dest_name,
+                "departure_time": dep_time,
+                "arrival_time": arr_time,
                 "stops_count": len(t.scheduled_stops),
                 "estimated_fares": fare_data["fares"],
                 "min_fare": fare_data["min_fare"],
